@@ -1,36 +1,22 @@
-name: Deploy to IIS (Windows)
+name: Reusable Deployment Workflow
 
 on:
-  push:
-    branches:
-      - '**'
-  pull_request:
-    branches:
-      - main
+  workflow_call:
+    inputs:
+      nombreBranch:
+        required: true
+        type: string
 
 jobs:
   deploy:
     runs-on: [self-hosted, windows, x64]
 
     steps:
-      - name: ⏱️ Obtener código del repositorio
-        uses: actions/checkout@v4
-
-      - name: 🔍 Extraer nombre de la rama
-        id: branch
-        run: |
-          $branch = "$env:GITHUB_REF" -replace '^refs/heads/', ''
-          if (!$branch) {
-            $branch = "$env:GITHUB_HEAD_REF"
-          }
-          echo "BRANCH_NAME=$branch" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        shell: powershell
-
       - name: 💬 Definir ruta destino
         shell: powershell
         run: |
-          $branch = $env:BRANCH_NAME
-          Write-Output "🌿 Rama detectada: $branch"
+          $branch = "${{ inputs.nombreBranch }}"
+          Write-Output "🌿 Rama recibida: $branch"
           $deployPath = "E:/inetpub/wwwroot/$branch"
           "DEPLOY_PATH=$deployPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
