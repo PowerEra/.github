@@ -1,0 +1,50 @@
+name: Deploy to IIS (Windows)
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, windows, x64]
+
+    steps:
+      - name: ⏱️ Obtener código del repositorio
+        uses: actions/checkout@v4
+
+      - name: 🔍 Extraer nombre de la rama
+        id: branch
+        run: |
+          $branch = "$env:GITHUB_REF" -replace '^refs/heads/', ''
+          if (!$branch) {
+            $branch = "$env:GITHUB_HEAD_REF"
+          }
+          echo "BRANCH_NAME=$branch" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        shell: powershell
+
+      - name: 💬 Definir ruta destino
+        shell: powershell
+        run: |
+          $branch = $env:BRANCH_NAME
+          Write-Output "🌿 Rama detectada: $branch"
+          $deployPath = "E:/inetpub/wwwroot/$branch"
+          "DEPLOY_PATH=$deployPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: 📂 Crear carpeta si no existe
+        shell: powershell
+        run: |
+          if (-Not (Test-Path -Path "$env:DEPLOY_PATH")) {
+            New-Item -ItemType Directory -Path "$env:DEPLOY_PATH"
+            Write-Output "📁 Carpeta creada: $env:DEPLOY_PATH"
+          } else {
+            Write-Output "📁 Carpeta ya existe: $env:DEPLOY_PATH"
+          }
+
+      - name: 📤 Copiar archivos al servidor
+        shell: powershell
+        run: |
+          Copy-Item -Path "$env:GITHUB_WORKSPACE\*" -Destination "$env:DEPLOY_PATH" -Recurse -Force
