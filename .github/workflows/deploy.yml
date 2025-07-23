@@ -1,4 +1,4 @@
-name: Reusable Deployment Workflow
+name: Flujo de despliegue generalizado
 
 on:
   workflow_call:
@@ -12,6 +12,9 @@ jobs:
     runs-on: [self-hosted, windows, x64]
 
     steps:
+      - name: ⏱️ Obtener código del repositorio
+        uses: actions/checkout@v4
+
       - name: 💬 Definir ruta destino
         shell: powershell
         run: |
